@@ -1,0 +1,56 @@
+---
+title: "Leaflet Example"
+author: "attackgnome"
+date: "7/19/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(leaflet)
+library(tidyverse)
+library(htmltools)
+```
+
+## Leaflet Demo
+
+For this demonstration of Leaflets capabilities, we will pull publicly available data from the South Dakota Department of Environment and Natural Resources and plot the well names.
+
+```{r data, warning=FALSE}
+##url for datasource
+url <- "http://www.sdgs.usd.edu/pubs/og/SDOILexport.zip"
+temp <- tempfile()
+download.file(url,temp)
+
+#Unzip well data
+tmp2 <- unzip(zipfile=temp, files = "Wells.xlsx", exdir=tempdir())
+#read well data to dataframe
+Wells <- read_excel(tmp2)
+
+Wells <- Wells %>% rename(latitude = `Latitude (GCS83)`,
+                          longitude = `Longitude (GCS83)`)
+```
+
+## Including Plots
+
+Now let's build a map using the data we pulled. This will plot markers with individual well information 
+
+```{r pressure, echo=FALSE}
+map <- Wells %>%
+  leaflet() %>%
+  addTiles() %>%
+  addMarkers(popup=paste
+             ("<br>Well Name: ", 
+               htmlEscape(Wells$`Well Name`), 
+              "<br>Operator: ", 
+               htmlEscape(Wells$Operator), 
+              "<br>Well Type: ", 
+               htmlEscape(Wells$`Well Completion Type`),
+              "<br>Ranking: ",
+               htmlEscape(Wells$`Bottom Hole Formation`)
+              ) 
+            )
+
+map
+```
